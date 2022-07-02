@@ -11,3 +11,17 @@ Put the InteractableComponent on the object you want to be activated like a door
 
 Then make an interaction action on your character have it check if whatever you are trying to interact with uses the interface and execute interact.
 
+Examples of buttons, doors, and pressure plates included. HOWEVER, the buttons and pressure plates will lose their interaction component on import and will need to be readded, default settings for the interaction component listed below. Likewise all of the examples will need some reconnections in the blueprints but you can see what should be there for them. If you need help feel free to ask.
+
+Button Settings : 
+  IsToggle : false
+  Send Reset Interaction : false
+  Reset Delay : 0.3
+  Needs to face : true
+  Start active : false
+  Keycode : -1
+  
+Pressure Plate : 
+  IsToggle : true
+  Send Reset Interaction : false
+    

@@ -1,5 +1,5 @@
 # Simple Interaction System
-Very simple Interactability System with interface
+Very simple Interactability System with interface for use in UE5
 
 Useable in C++/Mixed Unreal Projects
 

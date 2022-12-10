@@ -11,6 +11,7 @@ UInteractComponent::UInteractComponent()
 // Called when the game starts
 void UInteractComponent::BeginPlay()
 {
+	Super::BeginPlay();
 	if (startActive)
 	{
 		Interact();

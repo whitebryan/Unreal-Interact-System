@@ -24,4 +24,6 @@ class SIMPLEINTERACT_API IInteractInterface
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
 	void Interact();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
+	void ToggleHighlight(bool newStatus);
 };

@@ -13,3 +13,9 @@ Then make an interaction action on your character have it check if whatever you 
 
 Examples of buttons, doors, and pressure plates included.
 
+Now includes optional post process outline shader for highlighting interactable objects. Under Project Settings->Engine->Rendering->Postporcessing Enable Custom Depth-Stencil Pass then put the PostProccessOutline into your Postproccess volume. 
+After that enable Render CustomDepth Pass on the interactables mesh and then change the custom depth stencil value when it should be outlined
+
+Outline shader madde from these tutorials
+https://www.youtube.com/channel/UC_L8NgyCVqVUUGX3tN1jtHA
+https://www.tomlooman.com/unreal-engine-soft-outline/

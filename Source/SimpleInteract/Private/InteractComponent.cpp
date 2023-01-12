@@ -34,17 +34,40 @@ void UInteractComponent::Interact_Implementation()
 	}
 	else if (isInteractable)
 	{
-		isActivated = !isActivated;
-		OnInteract.Broadcast(isActivated);
+		if (movePlayerIntoPosition)
+		{
+			PlayerNeedsToMove.Broadcast();
+		}
+		else
+		{
+			OnInteract.Broadcast(isActivated);
+		}
 
+		isActivated = !isActivated;
 		//If the button isnt a toggle start a timer till it should reset
 		if (!isToggle)
 		{
 			if (GetWorld())
 			{
-				GetWorld()->GetTimerManager().SetTimer(resetTimer, this, &UInteractComponent::resetTrigger_Implementation, resetDelay, false);
+				float timerDelay = resetDelay;
+
+				//Add time to the delay if the player needs to move first, currenly hardcoded basedd off a 1 second timer to move the player
+				if (movePlayerIntoPosition)
+				{
+					timerDelay += 1;
+				}
+
+				GetWorld()->GetTimerManager().SetTimer(resetTimer, this, &UInteractComponent::resetTrigger_Implementation, timerDelay, false);
 			}
 		}
+	}
+}
+
+void UInteractComponent::ToggleHighlight_Implementation(bool status)
+{
+	if (highlightAble)
+	{
+		OnHighlight.Broadcast(status);
 	}
 }
 

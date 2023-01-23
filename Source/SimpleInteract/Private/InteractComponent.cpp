@@ -34,6 +34,8 @@ void UInteractComponent::Interact_Implementation()
 	}
 	else if (isInteractable)
 	{
+		isActivated = !isActivated;
+
 		if (movePlayerIntoPosition)
 		{
 			PlayerNeedsToMove.Broadcast();
@@ -43,7 +45,6 @@ void UInteractComponent::Interact_Implementation()
 			OnInteract.Broadcast(isActivated);
 		}
 
-		isActivated = !isActivated;
 		//If the button isnt a toggle start a timer till it should reset
 		if (!isToggle)
 		{

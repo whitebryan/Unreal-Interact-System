@@ -22,9 +22,6 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	//Platform Status
-	float curDistanceOnSpline = 0.01f;
-
 	//Checking distance to player
 	FTimerHandle distanceChecker;
 	void distanceCheck();
@@ -35,9 +32,12 @@ protected:
 	bool isDelayed = true;
 
 	//Movement
-	bool IsIncrementing = true;
-	float curSpeed = 0;
-	int lastPoint = 1;
+	int pointChange = 1;
+	int nextPoint = 1;
+	int numPoints = 0;
+
+	//Used if I later want to slow/speed up at certain points
+	float curSpeed;
 
 public:	
 	// Called every frame
@@ -58,6 +58,8 @@ public:
 	bool startDelayed = true;
 	UPROPERTY(EditAnywhere, Category = "Movement", meta = (ToolTip = "Speed the object should move.(multiplied by delta time) If you set this too high stopAtSplinePoints will not work"))
 	float moveSpeed = 200;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Movement")
+	bool shouldRotate = false;
 	UPROPERTY(EditAnywhere, Category = "Movement", meta = (ToolTip = "Should the object ever stop at points or ends"))
 	bool shouldEverStop = true;
 	UPROPERTY(EditAnywhere, Category = "Movement", meta = (ToolTip = "Stop at spline points or just ends. Not This is require for delays in a closed loop spline", EditCondition = "delayAtEnds"))
@@ -68,7 +70,7 @@ public:
 	//Object Ptrs
 	UPROPERTY(BlueprintReadWrite, Category = "Pointers")
 	USplineComponent* splineToFollow;
-	UPROPERTY(BlueprintReadWrite, Category = "Pointers")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pointers")
 	UStaticMeshComponent* objectToMove;
 
 	bool status = false;

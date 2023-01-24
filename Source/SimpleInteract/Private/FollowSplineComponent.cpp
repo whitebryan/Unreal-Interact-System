@@ -3,6 +3,7 @@
 
 #include "FollowSplineComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "TimerManager.h"
 
 // Sets default values for this component's properties
@@ -11,6 +12,8 @@ UFollowSplineComponent::UFollowSplineComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
+	SetComponentTickInterval(0);
+	SetTickGroup(ETickingGroup::TG_PrePhysics);
 
 	// ...
 }
@@ -23,9 +26,10 @@ void UFollowSplineComponent::BeginPlay()
 
 	//Grab out spline and static mesh from parent
 	splineToFollow = Cast<USplineComponent>(GetOwner()->GetComponentByClass(USplineComponent::StaticClass()));
-	objectToMove = Cast<UStaticMeshComponent>(GetOwner()->GetComponentByClass(UStaticMeshComponent::StaticClass()));
 
 	curSpeed = moveSpeed;
+
+	numPoints = splineToFollow->GetNumberOfSplinePoints();
 	if (GetWorld())
 	{
 		//If it should be active on start or not
@@ -63,73 +67,76 @@ void UFollowSplineComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	if (!isDelayed)
 	{
-		//Reset distance on spline to 0 once a closed loop has done a full rotation
-		if (splineToFollow->IsClosedLoop() && curDistanceOnSpline > 0 && splineToFollow->GetLocationAtDistanceAlongSpline(0, ESplineCoordinateSpace::Local).Equals(objectToMove->GetRelativeLocation(),3))
-		{
-			curDistanceOnSpline = 0;
-		}
-		else if (!splineToFollow->IsClosedLoop() && (curDistanceOnSpline <= 0 || (stopAtSplinePoints && lastPoint == 0 && objectToMove->GetRelativeLocation().Equals(splineToFollow->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::Local), 5))))//Flip move direction for non closed loops and delay if not using stop at spline points
-		{
-			curSpeed = moveSpeed;
-			curDistanceOnSpline = 0.01f;
+		//Check if we are currently nearly at a spline point
+		bool atPoint = objectToMove->GetRelativeLocation().Equals(splineToFollow->GetLocationAtSplinePoint(nextPoint, ESplineCoordinateSpace::Local), 5);
 
-			isDelayed = true;
-			GetWorld()->GetTimerManager().SetTimer(endDelayer, this, &UFollowSplineComponent::toggleDelay, stopDelay, false);
-			if (stopAtSplinePoints)
-			{
-				lastPoint += 1;
-			}
-			return;
-		}
-		else if (!splineToFollow->IsClosedLoop() && (curDistanceOnSpline >= splineToFollow->GetSplineLength() || (stopAtSplinePoints && lastPoint == splineToFollow->GetNumberOfSplinePoints()))) //Flip move direction for non closed loops and delay if not using stop at spline points
+		if (atPoint)
 		{
-			curSpeed = moveSpeed * -1;
-			curDistanceOnSpline = splineToFollow->GetSplineLength() - 0.01f;
-			
-			if (!stopAtSplinePoints)
+			if (splineToFollow->IsClosedLoop() && nextPoint >= numPoints)//Reset to 0 after a loop in a closed loop
+			{
+				nextPoint = 0;
+			}
+			else if (splineToFollow->IsClosedLoop())
+			{
+				++nextPoint;
+			}
+			else if(!splineToFollow->IsClosedLoop())
+			{
+				if (nextPoint >= numPoints)//change direction to go backwards in a non closed loop
+				{
+					pointChange = -1;
+
+					nextPoint += pointChange;
+
+					if (shouldEverStop && !stopAtSplinePoints)
+					{
+						isDelayed = true;
+						GetWorld()->GetTimerManager().SetTimer(endDelayer, this, &UFollowSplineComponent::toggleDelay, stopDelay, false);
+						return;
+					}
+				}
+				else if (nextPoint < 0)//Change direction to go forward again in non closed loop
+				{
+					pointChange = 1;
+
+					nextPoint += pointChange;
+
+					if (shouldEverStop && !stopAtSplinePoints)
+					{
+						isDelayed = true;
+						GetWorld()->GetTimerManager().SetTimer(endDelayer, this, &UFollowSplineComponent::toggleDelay, stopDelay, false);
+						return;
+					}
+				}
+				else
+				{
+					nextPoint += pointChange;
+				}
+			}
+
+			if (shouldEverStop && stopAtSplinePoints)//Pause if the spline is meant to stop
 			{
 				isDelayed = true;
 				GetWorld()->GetTimerManager().SetTimer(endDelayer, this, &UFollowSplineComponent::toggleDelay, stopDelay, false);
+				return;
 			}
-			else
-			{
-				lastPoint -= 1;
-			}
-
-			return;
 		}
-		
-		if (stopAtSplinePoints)//Check if we are near a point when using stop at spline points
+
+
+		//Interp towards next point
+		FVector newLoc = UKismetMathLibrary::VInterpTo_Constant(objectToMove->GetRelativeLocation(), splineToFollow->GetLocationAtSplinePoint(nextPoint, ESplineCoordinateSpace::Local), GetWorld()->GetDeltaSeconds(), curSpeed);
+
+
+		if (shouldRotate)//Get the cur dist on spline then rotate the platform if it should
 		{
-			int numPoints = splineToFollow->GetNumberOfSplinePoints();
-			if (splineToFollow->IsClosedLoop() && lastPoint >= numPoints)
-			{
-				lastPoint = 0;
-			}
-			else
-			{
-				FVector nextPointLoc = splineToFollow->GetLocationAtSplinePoint(lastPoint, ESplineCoordinateSpace::Local);
-				if (objectToMove->GetRelativeLocation().Equals(nextPointLoc, 5))
-				{
-					if (splineToFollow->IsClosedLoop())
-					{
-						++lastPoint;
-					}
-					else
-					{
-						lastPoint += UKismetMathLibrary::SignOfFloat(curSpeed);
-					}
+			FVector pos;
+			float curDist = splineToFollow->FindInputKeyClosestToWorldLocation(objectToMove->GetComponentLocation());
+			curDist = splineToFollow->GetDistanceAlongSplineAtSplineInputKey(curDist);
+			FRotator newRot = splineToFollow->GetRotationAtDistanceAlongSpline(curDist, ESplineCoordinateSpace::World);
 
-					isDelayed = true;
-					GetWorld()->GetTimerManager().SetTimer(endDelayer, this, &UFollowSplineComponent::toggleDelay, stopDelay, false);
-					return;
-				}
-			}
+			objectToMove->SetWorldRotation(newRot);
 		}
 
-		//Move platform
-		curDistanceOnSpline += (curSpeed * DeltaTime);
-		FVector newLoc = splineToFollow->GetLocationAtDistanceAlongSpline(curDistanceOnSpline, ESplineCoordinateSpace::Local);
 		objectToMove->SetRelativeLocation(newLoc);
 	}
 }
@@ -168,7 +175,7 @@ void UFollowSplineComponent::distanceCheck()
 	if (player == nullptr || owner == nullptr)
 		return;
 
-	float distance = UKismetMathLibrary::Vector_Distance(GetOwner()->GetActorLocation(), player->GetActorLocation());
+	float distance = UKismetMathLibrary::Vector_Distance(objectToMove->GetComponentLocation(), player->GetActorLocation());
 	if (UKismetMathLibrary::Abs(distance) >= distTillPause)
 	{
 		SetComponentTickEnabled(false);

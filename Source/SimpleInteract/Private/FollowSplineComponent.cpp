@@ -33,11 +33,11 @@ void UFollowSplineComponent::BeginPlay()
 	if (GetWorld())
 	{
 		//If it should be active on start or not
-		if (startActivated)
+		if (startActivated && shouldDistancePause)
 		{
 			GetWorld()->GetTimerManager().SetTimer(distanceChecker, this, &UFollowSplineComponent::distanceCheck, checkIncrement, true);
 		}
-		else
+		else if(!startActivated)
 		{
 			SetComponentTickEnabled(false);
 		}
@@ -147,13 +147,21 @@ void UFollowSplineComponent::Interact_Implementation()
 {
 	if (!status)
 	{
-		GetWorld()->GetTimerManager().SetTimer(distanceChecker, this, &UFollowSplineComponent::distanceCheck, checkIncrement, true);
+		if (shouldDistancePause)
+		{
+			GetWorld()->GetTimerManager().SetTimer(distanceChecker, this, &UFollowSplineComponent::distanceCheck, checkIncrement, true);
+		}
+
 		SetComponentTickEnabled(true);
 		status = true;
 	}
 	else
 	{
-		GetWorld()->GetTimerManager().ClearTimer(distanceChecker);
+		if (shouldDistancePause)
+		{
+			GetWorld()->GetTimerManager().ClearTimer(distanceChecker);
+		}
+
 		SetComponentTickEnabled(false);
 		status = false;
 	}

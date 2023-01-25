@@ -9,7 +9,7 @@
 #include "FollowSplineComponent.generated.h"
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class SIMPLEINTERACT_API UFollowSplineComponent : public UActorComponent, public IInteractInterface
 {
 	GENERATED_BODY()
@@ -28,12 +28,14 @@ protected:
 
 	//End Delay
 	FTimerHandle endDelayer;
-	void toggleDelay();
+
+	UPROPERTY(BlueprintReadOnly)
 	bool isDelayed = true;
 
 	//Movement
-	int pointChange = 1;
+	UPROPERTY(BlueprintReadOnly)
 	int nextPoint = 1;
+	int pointChange = 1;
 	int numPoints = 0;
 
 	//Used if I later want to slow/speed up at certain points
@@ -79,5 +81,5 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void Interact(); virtual void Interact_Implementation() override;
 
-		
+	void toggleDelay();
 };

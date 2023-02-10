@@ -13,7 +13,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractDelegate, bool, Status);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnResetDelegate, bool, Status);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGetKeysDelegate, bool, Status);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHighlightChange, bool, Status);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMovePlayer);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMovePlayer, AActor*, actorToMove, bool, interactAfter);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SIMPLEINTERACT_API UInteractComponent : public UActorComponent, public IInteractInterface
@@ -88,4 +88,6 @@ protected:
 	void Interact(); virtual void Interact_Implementation() override;
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Player Functionality")
 	void ToggleHighlight(bool newStatus); virtual void ToggleHighlight_Implementation(bool newStatus) override;
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Player Functionality")
+	void moveActorIntoPlace(AActor* actorToMove); virtual void moveActorIntoPlace_Implementation(AActor* actorToMove) override;
 };

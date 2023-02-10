@@ -2,6 +2,7 @@
 
 
 #include "InteractComponent.h"
+#include "GameFramework/Character.h" 
 
 // Sets default values for this component's properties
 UInteractComponent::UInteractComponent()
@@ -38,7 +39,7 @@ void UInteractComponent::Interact_Implementation()
 
 		if (movePlayerIntoPosition)
 		{
-			PlayerNeedsToMove.Broadcast();
+			PlayerNeedsToMove.Broadcast(Cast<AActor>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)), true);
 		}
 		else
 		{
@@ -113,4 +114,11 @@ bool UInteractComponent::characterFacingCheck()
 	{
 		return false;
 	}
+}
+
+
+//Used if you want to seperately move and interact
+void UInteractComponent::moveActorIntoPlace_Implementation(AActor* actorToMove)
+{
+	PlayerNeedsToMove.Broadcast(actorToMove, false);
 }

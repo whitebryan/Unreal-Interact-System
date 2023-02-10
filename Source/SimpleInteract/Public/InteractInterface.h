@@ -26,4 +26,6 @@ public:
 	void Interact();
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
 	void ToggleHighlight(bool newStatus);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
+	void moveActorIntoPlace(AActor* actorToMove);
 };

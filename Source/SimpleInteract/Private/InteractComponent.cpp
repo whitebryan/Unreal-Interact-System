@@ -29,12 +29,13 @@ void UInteractComponent::toggleInteractability_Implementation()
 //Main interaction function
 void UInteractComponent::Interact_Implementation()
 {
-	if (needsToFace && !characterFacingCheck())
+	if (isInteractable)
 	{
-		return;
-	}
-	else if (isInteractable)
-	{
+		if (needsToFace && !characterFacingCheck())
+		{
+			return;
+		}
+
 		isActivated = !isActivated;
 
 		if (movePlayerIntoPosition)
@@ -80,10 +81,12 @@ void UInteractComponent::resetTrigger_Implementation()
 
 	if (sendResetInteraction)
 	{
+		//Reset and interact again
 		OnInteract.Broadcast(isActivated);
 	}
 	else
 	{
+		//Reset status without interacting again
 		OnReset.Broadcast(isActivated);
 	}
 }
@@ -96,11 +99,11 @@ bool UInteractComponent::characterFacingCheck()
 	if (GetWorld())
 	{
 		playerPawn = GetWorld()->GetFirstPlayerController()->GetPawn();
-		if (playerPawn == NULL)
-			return false;
-		else
+		if (IsValid(playerPawn))
 		{
-			if (playerPawn->GetActorForwardVector().Dot(GetOwner()->GetActorForwardVector()) <= -0.5)
+			float heading = (GetOwner()->GetActorLocation() - playerPawn->GetActorLocation()).GetSafeNormal().Dot(playerPawn->GetActorForwardVector());
+			UKismetSystemLibrary::PrintWarning(FString::SanitizeFloat(heading));
+			if (heading > 0)
 			{
 				return true;
 			}
@@ -110,10 +113,8 @@ bool UInteractComponent::characterFacingCheck()
 			}
 		}
 	}
-	else
-	{
-		return false;
-	}
+
+	return false;
 }
 
 

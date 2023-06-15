@@ -43,15 +43,22 @@ public:
 
 
 	//Used if you want to make a UI notification or change how you interact
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Interact Properties", meta = (ToolTip = "Keyword for determing type of interaction"))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Interact Properties", meta = (ToolTip = "Keyword for determing type of interaction"))
 	FString interactionType = "none";
 
-	//Called to toggle whether the button is useable
+	//Called to toggle whether the button is usable
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Player Functionality", meta = (ToolTip = "Toggles the useability of the button"))
 	void toggleInteractability();
 
 	UFUNCTION(BlueprintCallable, Category = "Class functionality")
 	bool getStatus() { return isActivated; }
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Player Functionality")
+	void Interact(); virtual void Interact_Implementation() override;
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Player Functionality")
+	void ToggleHighlight(bool newStatus); virtual void ToggleHighlight_Implementation(bool newStatus) override;
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Player Functionality")
+	void moveActorIntoPlace(AActor* actorToMove); virtual void moveActorIntoPlace_Implementation(AActor* actorToMove) override;
 
 	//Delegates
 	UPROPERTY(BlueprintAssignable, Category = "Delegates")
@@ -69,11 +76,10 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	//Used to temperoraily disable a trigger
+	//Usability status
 	bool isInteractable = true;
 	//Activated status
 	bool isActivated = false;
-	//Highlight status
 
 	//Reset timer and function for non toggle triggers
 	FTimerHandle resetTimer;
@@ -82,12 +88,4 @@ protected:
 
 	//Check if character is facing interactable
 	bool characterFacingCheck();
-
-	//Interact interface reciever
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Player Functionality")
-	void Interact(); virtual void Interact_Implementation() override;
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Player Functionality")
-	void ToggleHighlight(bool newStatus); virtual void ToggleHighlight_Implementation(bool newStatus) override;
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Player Functionality")
-	void moveActorIntoPlace(AActor* actorToMove); virtual void moveActorIntoPlace_Implementation(AActor* actorToMove) override;
 };

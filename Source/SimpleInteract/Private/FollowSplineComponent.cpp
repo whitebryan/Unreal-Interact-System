@@ -161,7 +161,6 @@ void UFollowSplineComponent::Interact_Implementation()
 		{
 			GetWorld()->GetTimerManager().ClearTimer(distanceChecker);
 		}
-
 		SetComponentTickEnabled(false);
 		status = false;
 	}

@@ -13,81 +13,81 @@ UInteractComponent::UInteractComponent()
 void UInteractComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	if (startActive)
+	if (bStartActive)
 	{
 		Interact();
 	}
 }
 
 //Toggle the useability of the component 
-void UInteractComponent::toggleInteractability_Implementation()
+void UInteractComponent::toggleInteractability()
 {
-	isInteractable = !isInteractable;
-	OnToggleInteractability.Broadcast(isInteractable);
+	bIsInteractable = !bIsInteractable;
+	OnToggleInteractability.Broadcast(bIsInteractable);
 }
 
 //Main interaction function
-void UInteractComponent::Interact_Implementation()
+void UInteractComponent::Interact()
 {
-	if (isInteractable)
+	if (bIsInteractable)
 	{
-		if (needsToFace && !characterFacingCheck())
+		if (bNeedsToFace && !characterFacingCheck())
 		{
 			return;
 		}
 
-		isActivated = !isActivated;
+		bIsActivated = !bIsActivated;
 
-		if (movePlayerIntoPosition)
+		if (bMovePlayerIntoPosition)
 		{
 			PlayerNeedsToMove.Broadcast(Cast<AActor>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)), true);
 		}
 		else
 		{
-			OnInteract.Broadcast(isActivated);
+			OnInteract.Broadcast(bIsActivated);
 		}
 
 		//If the button isnt a toggle start a timer till it should reset
-		if (!isToggle)
+		if (!bIsToggle)
 		{
 			if (GetWorld())
 			{
 				float timerDelay = resetDelay;
 
 				//Add time to the delay if the player needs to move first, currenly hardcoded basedd off a 1 second timer to move the player
-				if (movePlayerIntoPosition)
+				if (bMovePlayerIntoPosition)
 				{
 					timerDelay += 1;
 				}
 
-				GetWorld()->GetTimerManager().SetTimer(resetTimer, this, &UInteractComponent::resetTrigger_Implementation, timerDelay, false);
+				GetWorld()->GetTimerManager().SetTimer(resetTimer, this, &UInteractComponent::resetTrigger, timerDelay, false);
 			}
 		}
 	}
 }
 
-void UInteractComponent::ToggleHighlight_Implementation(bool status)
+void UInteractComponent::ToggleHighlight(bool status)
 {
-	if (highlightAble)
+	if (bHighlightAble)
 	{
 		OnHighlight.Broadcast(status);
 	}
 }
 
 //Reset function
-void UInteractComponent::resetTrigger_Implementation()
+void UInteractComponent::resetTrigger()
 {
-	isActivated = !isActivated;
+	bIsActivated = !bIsActivated;
 
-	if (sendResetInteraction)
+	if (bSendResetInteraction)
 	{
 		//Reset and interact again
-		OnInteract.Broadcast(isActivated);
+		OnInteract.Broadcast(bIsActivated);
 	}
 	else
 	{
 		//Reset status without interacting again
-		OnReset.Broadcast(isActivated);
+		OnReset.Broadcast(bIsActivated);
 	}
 }
 
@@ -119,7 +119,7 @@ bool UInteractComponent::characterFacingCheck()
 
 
 //Used if you want to seperately move and interact
-void UInteractComponent::moveActorIntoPlace_Implementation(AActor* actorToMove)
+void UInteractComponent::moveActorIntoPlace(AActor* actorToMove)
 {
 	PlayerNeedsToMove.Broadcast(actorToMove, false);
 }

@@ -14,6 +14,10 @@ UFollowSplineComponent::UFollowSplineComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 	SetComponentTickInterval(0);
 	SetTickGroup(ETickingGroup::TG_PrePhysics);
+	interactComp = CreateDefaultSubobject<UInteractComponent>(TEXT("Interaction Component"));
+	interactComp->bIsToggle = true;
+	interactComp->bSendResetInteraction = false;
+	interactComp->bNeedsToFace = false;
 
 	// ...
 }
@@ -24,6 +28,8 @@ void UFollowSplineComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	interactComp->OnInteract.AddDynamic(this, &UFollowSplineComponent::Interact);
+
 	//Grab out spline and static mesh from parent
 	splineToFollow = Cast<USplineComponent>(GetOwner()->GetComponentByClass(USplineComponent::StaticClass()));
 
@@ -33,17 +39,17 @@ void UFollowSplineComponent::BeginPlay()
 	if (GetWorld())
 	{
 		//If it should be active on start or not
-		if (startActivated && shouldDistancePause)
+		if (bStartActivated && bShouldDistancePause)
 		{
 			GetWorld()->GetTimerManager().SetTimer(distanceChecker, this, &UFollowSplineComponent::distanceCheck, checkIncrement, true);
 		}
-		else if(!startActivated)
+		else if(!bStartActivated)
 		{
 			SetComponentTickEnabled(false);
 		}
 
 		//Delay first movement or not
-		if (startDelayed)
+		if (bStartDelayed)
 		{
 			GetWorld()->GetTimerManager().SetTimer(endDelayer, this, &UFollowSplineComponent::toggleDelay, stopDelay, false);
 		}
@@ -57,7 +63,7 @@ void UFollowSplineComponent::BeginPlay()
 //end delay
 void UFollowSplineComponent::toggleDelay()
 {
-	isDelayed = false;
+	bIsDelayed = false;
 }
 
 
@@ -65,7 +71,7 @@ void UFollowSplineComponent::toggleDelay()
 void UFollowSplineComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	if (!isDelayed)
+	if (!bIsDelayed)
 	{
 		//Check if we are currently nearly at a spline point
 		bool atPoint = objectToMove->GetRelativeLocation().Equals(splineToFollow->GetLocationAtSplinePoint(nextPoint, ESplineCoordinateSpace::Local), 5);
@@ -88,9 +94,9 @@ void UFollowSplineComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 					nextPoint += pointChange;
 
-					if (shouldEverStop && !stopAtSplinePoints)
+					if (bShouldEverStop && !bStopAtSplinePoints)
 					{
-						isDelayed = true;
+						bIsDelayed = true;
 						GetWorld()->GetTimerManager().SetTimer(endDelayer, this, &UFollowSplineComponent::toggleDelay, stopDelay, false);
 						return;
 					}
@@ -101,9 +107,9 @@ void UFollowSplineComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 					nextPoint += pointChange;
 
-					if (shouldEverStop && !stopAtSplinePoints)
+					if (bShouldEverStop && !bStopAtSplinePoints)
 					{
-						isDelayed = true;
+						bIsDelayed = true;
 						GetWorld()->GetTimerManager().SetTimer(endDelayer, this, &UFollowSplineComponent::toggleDelay, stopDelay, false);
 						return;
 					}
@@ -114,9 +120,9 @@ void UFollowSplineComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 				}
 			}
 
-			if (shouldEverStop && stopAtSplinePoints)//Pause if the spline is meant to stop
+			if (bShouldEverStop && bStopAtSplinePoints)//Pause if the spline is meant to stop
 			{
-				isDelayed = true;
+				bIsDelayed = true;
 				GetWorld()->GetTimerManager().SetTimer(endDelayer, this, &UFollowSplineComponent::toggleDelay, stopDelay, false);
 				return;
 			}
@@ -127,7 +133,7 @@ void UFollowSplineComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		FVector newLoc = UKismetMathLibrary::VInterpTo_Constant(objectToMove->GetRelativeLocation(), splineToFollow->GetLocationAtSplinePoint(nextPoint, ESplineCoordinateSpace::Local), GetWorld()->GetDeltaSeconds(), curSpeed);
 
 
-		if (shouldRotate)//Get the cur dist on spline then rotate the platform if it should
+		if (bShouldRotate)//Get the cur dist on spline then rotate the platform if it should
 		{
 			FVector pos;
 			float curDist = splineToFollow->FindInputKeyClosestToWorldLocation(objectToMove->GetComponentLocation());
@@ -143,26 +149,24 @@ void UFollowSplineComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 
 //Enable or disable the movement
-void UFollowSplineComponent::Interact_Implementation()
+void UFollowSplineComponent::Interact(bool bStatus)
 {
-	if (!status)
+	if (bStatus)
 	{
-		if (shouldDistancePause)
+		if (bShouldDistancePause)
 		{
 			GetWorld()->GetTimerManager().SetTimer(distanceChecker, this, &UFollowSplineComponent::distanceCheck, checkIncrement, true);
 		}
 
 		SetComponentTickEnabled(true);
-		status = true;
 	}
 	else
 	{
-		if (shouldDistancePause)
+		if (bShouldDistancePause)
 		{
 			GetWorld()->GetTimerManager().ClearTimer(distanceChecker);
 		}
 		SetComponentTickEnabled(false);
-		status = false;
 	}
 }
 

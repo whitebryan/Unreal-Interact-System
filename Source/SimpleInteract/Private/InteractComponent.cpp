@@ -102,7 +102,6 @@ bool UInteractComponent::characterFacingCheck()
 		if (IsValid(playerPawn))
 		{
 			float heading = (GetOwner()->GetActorLocation() - playerPawn->GetActorLocation()).GetSafeNormal().Dot(playerPawn->GetActorForwardVector());
-			UKismetSystemLibrary::PrintWarning(FString::SanitizeFloat(heading));
 			if (heading > 0)
 			{
 				return true;

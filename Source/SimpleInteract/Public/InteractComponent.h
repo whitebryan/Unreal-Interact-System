@@ -48,6 +48,10 @@ public:
 	//Called to toggle whether the button is usable
 	UFUNCTION(BlueprintCallable, Category = "Player Functionality", meta = (ToolTip = "Toggles the useability of the button"))
 	void toggleInteractability();
+	UFUNCTION(BlueprintCallable, Category = "Player Functionality", meta = (ToolTip = "Sets the useability of the button"))
+	void setInteractability(bool bShouldBeInteractable);
+	UFUNCTION(BlueprintCallable, Category = "Player Functionality", meta = (ToolTip = "Gets the useability of the button"))
+	bool getInteractability() { return bIsInteractable; }
 
 	UFUNCTION(BlueprintCallable, Category = "Class functionality")
 	bool getStatus() { return bIsActivated; }

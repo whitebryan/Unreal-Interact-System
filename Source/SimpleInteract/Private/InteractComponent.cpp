@@ -22,7 +22,12 @@ void UInteractComponent::BeginPlay()
 //Toggle the useability of the component 
 void UInteractComponent::toggleInteractability()
 {
-	bIsInteractable = !bIsInteractable;
+	setInteractability(!bIsInteractable);
+}
+
+void UInteractComponent::setInteractability(bool bShouldBeInteractable)
+{
+	bIsInteractable = bShouldBeInteractable;
 	OnToggleInteractability.Broadcast(bIsInteractable);
 }
 
@@ -102,6 +107,7 @@ bool UInteractComponent::characterFacingCheck()
 		if (IsValid(playerPawn))
 		{
 			float heading = (GetOwner()->GetActorLocation() - playerPawn->GetActorLocation()).GetSafeNormal().Dot(playerPawn->GetActorForwardVector());
+
 			if (heading > 0)
 			{
 				return true;

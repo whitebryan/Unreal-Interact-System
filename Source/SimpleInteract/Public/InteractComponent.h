@@ -7,6 +7,12 @@
 #include "Kismet/GameplayStatics.h"
 #include "InteractComponent.generated.h"
 
+//Used to distinguish the type of interaction happening
+UENUM(Blueprintable, BlueprintType)
+enum UInteractionType {
+	DefaultInteraction,
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnToggleInteractabilityDelegate, bool, Status);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractDelegate, bool, Status);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnResetDelegate, bool, Status);
@@ -43,7 +49,7 @@ public:
 
 	//Used if you want to make a UI notification or change how you interact
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Interact Properties", meta = (ToolTip = "Keyword for determing type of interaction"))
-	FString interactionType = "none";
+	TEnumAsByte<UInteractionType> interactionType = UInteractionType::DefaultInteraction;
 
 	//Called to toggle whether the button is usable
 	UFUNCTION(BlueprintCallable, Category = "Player Functionality", meta = (ToolTip = "Toggles the useability of the button"))
@@ -80,6 +86,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	//Usability status
+	UPROPERTY(BlueprintReadOnly)
 	bool bIsInteractable = true;
 	//Activated status
 	bool bIsActivated = false;
